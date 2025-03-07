@@ -4,11 +4,15 @@ from django.urls import reverse
 from expression import models
 from .models import Genesummary, Genecounts, Transcriptcounts, TranscriptFeature
 from .forms import GeneForm, TheForm 
-from .utils.plotting import gene_boxplot, run_r_ggtranscript
+from .utils.plotting import gene_boxplot, run_r_ggtranscript, transript_visualisation
 import pandas as pd
 import os
 import subprocess
 import time
+import plotly.io as pio
+import plotly
+import plotly.express as px
+
 
 
 # Home tab
@@ -108,13 +112,20 @@ def transcript_identify(request):
 
             if transcript_form.is_valid():
                 selected_transcripts = transcript_form.cleaned_data['Transcripts']
-                selected_transcript_df = TranscriptFeature.objects.filter(isoform=selected_transcripts[0])
-                df = pd.DataFrame(selected_transcript_df.values())
-                dir_path = os.path.dirname(os.path.realpath(__file__))
-                gtfPath = os.path.join(dir_path, 'static/plot_df.csv')
-                df.to_csv(gtfPath)
+                #selected_transcript_df = TranscriptFeature.objects.filter(isoform=selected_transcripts[0])
+                #df = pd.DataFrame(selected_transcript_df.values())
+                #dir_path = os.path.dirname(os.path.realpath(__file__))
+                #gtfPath = os.path.join(dir_path, 'static/plot_df.csv')
+                #df.to_csv(gtfPath)
 
-                plot = run_r_ggtranscript(gtfPath)  # Modify this function to accept isoform ID
+                # transcript structure
+                #plot = run_r_ggtranscript(gtfPath)  # Modify this function to accept isoform ID
+                #plotStructure = transript_visualisation(df)
+                dir_path = os.path.dirname(os.path.realpath(__file__))
+                gtfPath = os.path.join(dir_path, 'static', f"{gene_name}.txt")
+                print(gtfPath)
+                plotStructure = transript_visualisation(gtfPath, selected_transcripts[0])
+                #plotStructure_html = pio.to_html(plotStructure)
 
                 # boxplot
                 selected_transcript_expression_df = Transcriptcounts.objects.filter(isoform=selected_transcripts[0])
@@ -125,7 +136,7 @@ def transcript_identify(request):
                 # Render the success message with selected transcripts
                 return render(request, 'expression/transcript_level.html', {
                     'selected_transcripts': selected_transcripts,
-                    'plot' : plot,
+                    'plotStructure' : plotStructure,
                     'plotExpression': plotExpression,
                     'gene_name': gene_name
                 })

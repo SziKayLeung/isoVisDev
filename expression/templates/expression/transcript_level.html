@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block head %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
 {% block content %}
     <div style="min-height: calc(100vh - 100px);">
         <h1>{{ gene_name }}</h1>
@@ -12,25 +16,15 @@
                 <span>No transcripts selected.</span>
             {% endfor %}
         </div>
+   
+        <div class="container-fluid d-flex justify-content-left">
+            {{ plotStructure | safe }}
+        </div>
 
         <div class="container-fluid d-flex justify-content-left">
-            <button id="toggle-plot1" onclick="togglePlot('plot1')" class="active">Structure</button>
-            <button id="toggle-plot2" onclick="togglePlot('plot2')">Expression</button>
+            {{ plotExpression | safe }}
         </div>
 
-        <div id="plot1" class="plot" style="display: block;">  <!-- Show Plot 1 by default -->
-            {% if plot %}
-                <div>
-					<img src="{{ post.image.url }}" alt="img">
-                </div>
-            {% endif %}
-        </div>
-
-        <div id="plot2" class="plot" style="display: none;">
-            <div class="container-fluid d-flex justify-content-left">
-                {{ plotExpression | safe }}
-            </div>
-        </div>
     </div>
 
     <script>

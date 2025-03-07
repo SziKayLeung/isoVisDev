@@ -21,7 +21,7 @@
         <div id="plot1" class="plot" style="display: block;">  <!-- Show Plot 1 by default -->
             {% if plot %}
                 <div>
-                    <img src="{% static 'plots/transcript_plot.png' %}" alt="Transcript Plot">
+					<img src="{{ post.image.url }}" alt="img">
                 </div>
             {% endif %}
         </div>

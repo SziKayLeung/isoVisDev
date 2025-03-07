@@ -2,6 +2,8 @@ from django.db import models
 
 # to make new model: python manage.py makemigrations, python manage.py migrate
 
+image = models.ImageField(upload_to='img')
+
 class Genesummary(models.Model):
     geneName = models.CharField(max_length=50)
     totalNum = models.PositiveIntegerField()
@@ -34,7 +36,6 @@ class Transcriptcounts(models.Model):
     
     def __str__(self):
         return self.isoform
-
 
 # Transcript gtf
 class TranscriptFeature(models.Model):

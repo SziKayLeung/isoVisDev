@@ -10,12 +10,7 @@ for (package in required_packages) {
     }
 }
 
-# Install development packages
-for (package in dev_packages) {
-    if (!require(package, character.only = TRUE)) {
-        devtools::install_github(package)
-    }
-}
+#devtools::install_github("dzhang32/ggtranscript")
 
 # packages
 suppressMessages(library("ggplot2"))

@@ -71,7 +71,7 @@ def transcript_identify(request):
             gene_form = GeneForm(request.POST)
             if gene_form.is_valid():
                 gene_name = gene_form.cleaned_data['gene_name']
-                transcripts = TranscriptFeature.objects.filter(geneName=gene_name)
+                transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
                 unique_transcripts = {transcript.isoform: transcript for transcript in transcripts}.values()
 
                 if transcripts.exists():
@@ -105,7 +105,7 @@ def transcript_identify(request):
             gene_name = request.session.get('gene_name')
 
             # Re-fetch transcripts based on the stored gene_name
-            transcripts = TranscriptFeature.objects.filter(geneName=gene_name)
+            transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
             unique_transcripts = {transcript.isoform: transcript for transcript in transcripts}.values()
             transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
             transcript_form.fields['Transcripts'].choices = transcript_choices

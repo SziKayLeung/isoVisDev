@@ -20,7 +20,7 @@ def gene_boxplot(df):
       y = 'counts',
       color = 'sex',
       template='simple_white',
-      labels={'x': '', 'y':'Normalised counts'})
+      labels={'group': 'Group', 'counts':'Normalised expression'})
       
     fig =  fig.to_html()
     return fig
@@ -46,7 +46,6 @@ def transript_visualisation(gtfPath, transcript):
         
         # Add rectangles for each feature type
         for _, row in transcript_data.iterrows():
-            print(row)
             if row['type']=='UTR':
                 color='orange'
                 width=5
@@ -71,7 +70,7 @@ def transript_visualisation(gtfPath, transcript):
         yaxis_title="Transcript ID",
         yaxis=dict(tickmode='array', tickvals=transcripts, ticktext=transcripts),
         showlegend=False,
-        height=1000,
+        height=240,
         plot_bgcolor="white"
     )
 

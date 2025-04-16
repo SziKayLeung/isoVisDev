@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
 
         #Code to load the data into database
-        for row in DictReader(open('./expression/files/whole_transcript_sex_counts.csv')):
+        for row in DictReader(open('./expression/files/NormalisedTranscriptCounts.csv')):
             Transcriptcount=Transcriptcounts(sampleID=row['sampleID'], geneName=row['geneName'], isoform=row['isoform'], counts=row['counts'], group=row['group'], sex = row['sex'])  
             Transcriptcount.save()
     

@@ -37,7 +37,7 @@ class Command(BaseCommand):
 
 
         #Code to load the data into database
-        for row in DictReader(open('./expression/files/whole_genecounts_testing.csv')):
+        for row in DictReader(open('./expression/files/NormalisedGeneCounts.csv')):
             Genecount=Genecounts(sampleID=row['sampleID'], geneName=row['geneName'], counts=row['counts'], group=row['group'], sex = row['sex'])  
             Genecount.save()
     

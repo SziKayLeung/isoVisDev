@@ -35,3 +35,8 @@ final$sex <- as.factor(final$sex)
 final$group <- as.factor(final$group)
 final$counts <- round(final$counts, 2)
 write.csv(final, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts.csv", quote = F, row.names = F)
+
+# structural category of transcripts
+class.files <- fread("/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/C_Whole_Targeted/9_sqanti_final/sqantifiltered_monoexonicfiltered_2reads2samples_classification_finalversion.txt", data.table = F)
+subsetted.class.files <- class.files[class.files$isoform %in% final$isoform,c("isoform","structural_category")]
+write.csv(subsetted.class.files, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts_category.csv", quote = F, row.names = F)

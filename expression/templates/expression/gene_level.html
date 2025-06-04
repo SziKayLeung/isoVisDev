@@ -1,6 +1,30 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<br>
+
+<!-- Gene Selection Form -->
+<div class="container-fluid d-flex justify-content-left mb-4">
+    <form method="POST" action="">
+        <!-- ADD THIS TAG IN HTML FORMS WITH POST REQUESTS -->
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="genename">Enter gene symbol name:</label>
+            <input name="genename" type="text" class="form-control my-2" placeholder="APP" style="width: 400px;" value="{{ request.POST.genename }}">
+        </div>
+        
+        <button type="submit" class="btn btn-primary mt-2">Search gene</button>
+
+        {% if error_message %}
+            <div class="alert alert-danger mt-3">{{ error_message }}</div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Results Section -->
+{% if show_results %}
+<hr class="mb-4">
+
 <table class="table" style="width: 30%">
   <thead>
     <tr>
@@ -28,4 +52,6 @@
 <div class="container-fluid d-flex justify-content-left">
   {{plot | safe}}
 </div>
+{% endif %}
+
 {% endblock  %}

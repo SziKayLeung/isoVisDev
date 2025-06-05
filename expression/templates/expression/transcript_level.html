@@ -28,16 +28,61 @@
 
         <!-- Transcript Selection Form -->
         {% if show_transcript_form %}
-            <div class="container-fluid d-flex justify-content-left mb-4">
+            <div class="container-fluid mb-4">
                 <form method="POST">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label for="{{ transcript_form.Transcripts.id_for_label }}">Select Transcripts:</label>
-                        <div style="margin-top: 10px;">
-                            {{ transcript_form.Transcripts }}
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <!-- Transcript Selection -->
+                        <div>
+                            <div class="form-group">
+                                <label for="{{ transcript_form.Transcripts.id_for_label }}">Select Transcripts:</label>
+                                <div style="margin-top: 10px;">
+                                    {{ transcript_form.Transcripts }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                        <div>
+                            <div class="form-group">
+                                <label>Structural Category:</label>
+                                <div style="margin-top: 10px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filter-FSM" name="filter_fsm" checked>
+                                        <label class="form-check-label" for="filter-FSM">
+                                            Full Splice Match
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filter-ISM" name="filter_ism" checked>
+                                        <label class="form-check-label" for="filter-ISM">
+                                            Incomplete Splice Match
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filter-NIC" name="filter_nic" checked>
+                                        <label class="form-check-label" for="filter-NIC">
+                                            Novel, In Catalogue
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filter-NNC" name="filter_nnc" checked>
+                                        <label class="form-check-label" for="filter-NNC">
+                                            Novel, Not in Catalogue
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="filter-GG" name="filter_gg" checked>
+                                        <label class="form-check-label" for="filter-GG">
+                                            Genic Genomic
+                                        </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div style="margin-top: 20px;">
+                    
+                    <!-- Submit Button on new line -->
+                    <div style="flex-basis: 100%;">
                         <button type="submit" class="btn btn-primary">{% if show_results %}Update Results{% else %}Submit{% endif %}</button>
                     </div>
                 </form>

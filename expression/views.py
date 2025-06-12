@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 from django.shortcuts import render
 
@@ -115,11 +113,8 @@ def transcript_identify(request):
                 selected_transcripts = transcript_form.cleaned_data["Transcripts"]
 
                 # transcript structure
-                dir_path = os.path.dirname(os.path.realpath(__file__))
-                gtfPath = os.path.join(dir_path, "static", f"{gene_name}.txt")
-                print(gtfPath)
                 plotStructure = transript_visualisation(
-                    gtfPath, selected_transcripts[0]
+                    gene_name, selected_transcripts[0]
                 )
 
                 # boxplot

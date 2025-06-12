@@ -49,7 +49,7 @@ def transript_visualisation(gtfPath, transcript):
                 color = "blue"
                 width = 10
             else:
-                colour = "grey"
+                color = "grey"
                 width = 1
             fig.add_trace(
                 go.Scatter(

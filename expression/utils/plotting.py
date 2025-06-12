@@ -25,9 +25,6 @@ def transript_visualisation(gtfPath, transcript):
     # Read shorten_gaps df
     df = pd.read_csv(gtfPath, sep="\t")
 
-    # Only plot a few transcripts
-    # to_plot=["ONT17_2060_1262" ,"ONT17_2060_3082" ,"ONT17_2060_2166" ,"ONT17_2060_4043"]
-
     # Extract transcripts to plot and reference transcripts
     df = df[(df["transcript_id"] == transcript) | (df["transcript_id"].str[0] == "E")]
 
@@ -63,7 +60,6 @@ def transript_visualisation(gtfPath, transcript):
 
     # Update layout to make the plot clearer
     fig.update_layout(
-        # title="ACTG1",
         xaxis_title="Genomic Position",
         yaxis_title="Transcript ID",
         yaxis=dict(tickmode="array", tickvals=transcripts, ticktext=transcripts),

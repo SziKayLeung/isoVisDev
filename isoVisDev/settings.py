@@ -26,7 +26,13 @@ SECRET_KEY = "django-insecure-t-n*(rbzl@29toox-%zh16z^$8jnslm4kddj*x0pazut#y9t!h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["test-rse-env.eba-fm2ikf4n.eu-north-1.elasticbeanstalk.com"]
+ALLOWED_HOSTS = [
+    "isoforms-rse-env.eba-3f5qqpmj.eu-north-1.elasticbeanstalk.com",
+    "isoforms.com",
+    "localhost",
+    "127.0.0.1",
+    "172.31.34.21",  # allows internal traffic from AWS, e.g. load balancer
+]
 
 
 # Application definition

@@ -3,3 +3,4 @@
 db.sqlite3 filter=lfs diff=lfs merge=lfs -text
 # Don't add these folders when creating archive file
 files/ export-ignore
+expression/static/ export-ignore

@@ -1,4 +1,5 @@
 import logging
+import os
 from io import StringIO
 
 import boto3
@@ -20,29 +21,14 @@ def fetch_gene_data_from_s3(gene_name):
     Returns:
         pd.DataFrame: The gene data as a pandas DataFrame
     """
-    # # Temporary fallback to local files until S3 is configured
-    # dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    # gtfPath = os.path.join(dir_path, "static", f"{gene_name}.txt")
-
-    # try:
-    #     df = pd.read_csv(gtfPath, sep="\t")
-    #     return df
-    # except FileNotFoundError:
-    #     logger.error(f"Gene data file not found for {gene_name}")
-    #     raise
-    # except Exception as e:
-    #     logger.error(f"Error reading gene data for {gene_name}: {e}")
-    #     raise
-
     try:
         # Configure S3 client (uses IAM role credentials automatically)
         s3_client = boto3.client("s3")
 
-        # Define your bucket and key
         bucket_name = "gene-data-bucket"
         object_key = f"static/{gene_name}.txt"
 
-        # Fetch the object from S3
+        # Fetch the object from S3 bucket
         response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
         content = response["Body"].read().decode("utf-8")
 
@@ -51,8 +37,21 @@ def fetch_gene_data_from_s3(gene_name):
         return df
 
     except ClientError as e:
-        logger.error(f"Error fetching gene data for {gene_name} from S3: {e}")
+        logger.error(f"Error fetching gene data for {gene_name} from S3 bucket: {e}")
+
+        # Try getting file from local storage as a fallback - this is just for running locally in development
+        dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        gtfPath = os.path.join(dir_path, "static", f"{gene_name}.txt")
+        try:
+            df = pd.read_csv(gtfPath, sep="\t")
+            return df
+        except FileNotFoundError:
+            logger.error(f"Local gene data file not found for {gene_name}")
+            raise
+        except Exception as local_e:
+            logger.error(f"Error reading local gene data for {gene_name}: {local_e}")
         raise
+
     except Exception as e:
         logger.error(f"Unexpected error fetching gene data for {gene_name}: {e}")
         raise

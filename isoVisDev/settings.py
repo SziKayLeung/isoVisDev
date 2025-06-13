@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "isoforms-rse-env.eba-3f5qqpmj.eu-north-1.elasticbeanstalk.com",
-    "isoforms.com",
+    ".isoforms.com",  # allows any subdomain (e.g. www) or root domain
     "localhost",
     "127.0.0.1",
     "172.31.34.21",  # allows internal traffic from AWS, e.g. load balancer

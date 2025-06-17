@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+import re
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,10 +32,10 @@ ALLOWED_HOSTS = [
     ".isoforms.com",  # allows any subdomain (e.g. www) or root domain
     "localhost",
     "127.0.0.1",
+    re.compile(
+        r"^172\.31\.\d{1,3}\.\d{1,3}$"
+    ),  # allow any IPv4 address, for AWS internal traffic - e.g. for health checks
 ]
-# For Elastic Beanstalk internal traffic - e.g. for health checks
-if os.environ.get("ENVIRONMENT_NAME", "").lower() == "isoforms-rse-env":
-    ALLOWED_HOSTS.append(".elb.amazonaws.com")
 
 
 # Application definition

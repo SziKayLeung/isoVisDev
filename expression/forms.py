@@ -25,7 +25,7 @@ class TheForm(forms.Form):
         required=False,  # Make it optional so filtering doesn't require selection
         widget=forms.SelectMultiple(
             attrs={
-                "style": "height: 136px;",
+                "style": "height: 136px; width: 200px; outline: none; border: 1px solid #ced4da; box-sizing: border-box;",
             }
         ),
     )

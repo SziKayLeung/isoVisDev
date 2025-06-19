@@ -50,7 +50,7 @@
                                 <div style="margin-top: 10px;">
                                     <div class="form-check">
                                         <input class="form-check-input category-filter" type="checkbox" id="filter-FSM" name="filter_fsm" 
-                                               {% if not selected_categories or 'FSM' in selected_categories %}checked{% endif %}
+                                               {% if 'FSM' in selected_categories %}checked{% endif %}
                                                onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-FSM">
                                             Full Splice Match
@@ -58,7 +58,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input category-filter" type="checkbox" id="filter-ISM" name="filter_ism" 
-                                               {% if not selected_categories or 'ISM' in selected_categories %}checked{% endif %}
+                                               {% if 'ISM' in selected_categories %}checked{% endif %}
                                                onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-ISM">
                                             Incomplete Splice Match
@@ -66,7 +66,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input category-filter" type="checkbox" id="filter-NIC" name="filter_nic" 
-                                               {% if not selected_categories or 'NIC' in selected_categories %}checked{% endif %}
+                                               {% if 'NIC' in selected_categories %}checked{% endif %}
                                                onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-NIC">
                                             Novel, In Catalogue
@@ -74,7 +74,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input category-filter" type="checkbox" id="filter-NNC" name="filter_nnc" 
-                                               {% if not selected_categories or 'NNC' in selected_categories %}checked{% endif %}
+                                               {% if 'NNC' in selected_categories %}checked{% endif %}
                                                onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-NNC">
                                             Novel, Not in Catalogue
@@ -82,7 +82,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input category-filter" type="checkbox" id="filter-GG" name="filter_gg" 
-                                               {% if not selected_categories or 'GG' in selected_categories %}checked{% endif %}
+                                               {% if 'GG' in selected_categories %}checked{% endif %}
                                                onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-GG">
                                             Genic Genomic

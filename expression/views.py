@@ -70,10 +70,6 @@ def transcript_identify(request):
                     if request.POST.get(filter_name):
                         selected_categories.append(category_code)
 
-                # If no categories selected, use all categories
-                if not selected_categories:
-                    selected_categories = list(category_mapping.values())
-
                 # Get filtered transcripts
                 transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
                 if selected_categories:
@@ -81,6 +77,9 @@ def transcript_identify(request):
                         category__in=selected_categories
                     ).values_list("isoform", flat=True)
                     transcripts = transcripts.filter(isoform__in=filtered_isoforms)
+                else:
+                    # If no categories selected, show no transcripts
+                    transcripts = transcripts.none()
 
                 unique_transcripts = {
                     transcript.isoform: transcript for transcript in transcripts
@@ -126,7 +125,7 @@ def transcript_identify(request):
             if gene_form.is_valid():
                 gene_name = gene_form.cleaned_data["gene_name"]
 
-                # Get selected category filters (default to all if none selected)
+                # Get selected category filters (default to all for initial search)
                 selected_categories = []
                 category_mapping = {
                     "filter_fsm": "FSM",
@@ -140,8 +139,12 @@ def transcript_identify(request):
                     if request.POST.get(filter_name):
                         selected_categories.append(category_code)
 
-                # If no categories selected, use all categories
-                if not selected_categories:
+                # If this is initial gene search (no checkboxes in POST), default to all categories
+                checkbox_in_post = any(
+                    request.POST.get(filter_name)
+                    for filter_name in category_mapping.keys()
+                )
+                if not checkbox_in_post:
                     selected_categories = list(category_mapping.values())
 
                 # Get transcripts for the gene
@@ -156,6 +159,9 @@ def transcript_identify(request):
 
                     # Filter transcripts to only include those with matching categories
                     transcripts = transcripts.filter(isoform__in=filtered_isoforms)
+                else:
+                    # If no categories selected, show no transcripts
+                    transcripts = transcripts.none()
 
                 unique_transcripts = {
                     transcript.isoform: transcript for transcript in transcripts

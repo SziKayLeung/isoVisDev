@@ -7,17 +7,16 @@ from expression.models import TranscriptCategory
 
 ALREADY_LOADED_ERROR_MESSAGE = """
 If you need to reload the transcript category data from the CSV file,
-you can clear just this table's data using:
-python manage.py shell
->>> from expression.models import TranscriptCategory
->>> TranscriptCategory.objects.all().delete()
+first delete the db.sqlite3 file to destroy the database.
+Then, run `python manage.py migrate` for a new empty
+database with tables
 
-Then run this command again:
+Important to migrate the app first: 
+manage.py makemigrations expression
+manage.py migrate
+
+# to reload the database
 python manage.py load_transcript_category
-
-Important: Before first use, make sure to create and apply migrations:
-python manage.py makemigrations expression
-python manage.py migrate
 """
 
 

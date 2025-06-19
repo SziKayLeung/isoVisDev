@@ -29,8 +29,9 @@
         <!-- Transcript Selection Form -->
         {% if show_transcript_form %}
             <div class="container-fluid mb-4">
-                <form method="POST">
+                <form method="POST" id="transcript-form">
                     {% csrf_token %}
+                    <input type="hidden" name="filter_action" id="filter-action" value="">
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                         <!-- Transcript Selection -->
                         <div>
@@ -48,31 +49,41 @@
                                 <label>Structural Category:</label>
                                 <div style="margin-top: 10px;">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filter-FSM" name="filter_fsm" checked>
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-FSM" name="filter_fsm" 
+                                               {% if not selected_categories or 'FSM' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-FSM">
                                             Full Splice Match
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filter-ISM" name="filter_ism" checked>
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-ISM" name="filter_ism" 
+                                               {% if not selected_categories or 'ISM' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-ISM">
                                             Incomplete Splice Match
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filter-NIC" name="filter_nic" checked>
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-NIC" name="filter_nic" 
+                                               {% if not selected_categories or 'NIC' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-NIC">
                                             Novel, In Catalogue
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filter-NNC" name="filter_nnc" checked>
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-NNC" name="filter_nnc" 
+                                               {% if not selected_categories or 'NNC' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-NNC">
                                             Novel, Not in Catalogue
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="filter-GG" name="filter_gg" checked>
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-GG" name="filter_gg" 
+                                               {% if not selected_categories or 'GG' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
                                         <label class="form-check-label" for="filter-GG">
                                             Genic Genomic
                                         </label>
@@ -116,6 +127,13 @@
     </div>
 
     <script>
+        function filterTranscripts() {
+            // Set the hidden field to indicate this is a filter action
+            document.getElementById('filter-action').value = 'filter';
+            // Submit the form
+            document.getElementById('transcript-form').submit();
+        }
+        
         function togglePlot(plotId) {
             const plots = document.querySelectorAll('.plot');
             plots.forEach(plot => {

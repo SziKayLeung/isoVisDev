@@ -22,6 +22,7 @@ class TheForm(forms.Form):
 
     Transcripts = forms.MultipleChoiceField(
         choices=[],  # Choices will be populated dynamically
+        required=False,  # Make it optional so filtering doesn't require selection
         widget=forms.SelectMultiple(
             attrs={
                 "style": "height: 136px;",

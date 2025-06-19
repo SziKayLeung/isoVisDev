@@ -1,9 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block head %}
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-{% endblock %}
+{% comment %} {% load static %} {% endcomment %}
 
 {% block content %}
     <div style="min-height: calc(100vh - 100px);">
@@ -151,7 +147,7 @@
     </script>
 
     <style>
-        .active {
+        button.active {
             background-color: #007bff;  /* Highlight color */
             color: white;                /* Text color for active button */
         }

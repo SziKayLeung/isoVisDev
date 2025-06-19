@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
-{% comment %} {% load static %} {% endcomment %}
+{% load static %}
+
+{% block head %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
 
 {% block content %}
     <div style="min-height: calc(100vh - 100px);">
@@ -111,16 +115,31 @@
                 </div>
            
                 <div class="container-fluid d-flex justify-content-left mb-4">
-                    {{ plotStructure | safe }}
+                    <div id="plot-structure"></div>
                 </div>
 
                 <div class="container-fluid d-flex justify-content-left">
-                    {{ plotExpression | safe }}
+                    <div id="plot-expression"></div>
                 </div>
             </div>
         {% endif %}
 
     </div>
+
+    {% if show_results %}
+    <script>
+        // Render plots from JSON data
+        {% if plotStructure %}
+            var plotStructureData = JSON.parse('{{ plotStructure|escapejs }}');
+            Plotly.newPlot('plot-structure', plotStructureData.data, plotStructureData.layout, {responsive: true});
+        {% endif %}
+        
+        {% if plotExpression %}
+            var plotExpressionData = JSON.parse('{{ plotExpression|escapejs }}');
+            Plotly.newPlot('plot-expression', plotExpressionData.data, plotExpressionData.layout, {responsive: true});
+        {% endif %}
+    </script>
+    {% endif %}
 
     <script>
         function filterTranscripts() {

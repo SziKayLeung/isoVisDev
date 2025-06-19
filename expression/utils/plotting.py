@@ -67,8 +67,8 @@ def gene_boxplot(df):
         labels={"group": "Group", "counts": "Normalised expression"},
     )
 
-    fig = fig.to_html()
-    return fig
+    # Return JSON instead of HTML
+    return fig.to_json()
 
 
 def transript_visualisation(gene_name, transcript):
@@ -117,5 +117,5 @@ def transript_visualisation(gene_name, transcript):
         plot_bgcolor="white",
     )
 
-    fig = fig.to_html()
-    return fig
+    # Return JSON instead of HTML
+    return fig.to_json()

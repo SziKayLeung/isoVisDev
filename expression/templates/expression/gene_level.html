@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
 {% block content %}
 
 <!-- Gene Selection Form -->
@@ -50,8 +54,18 @@
 <br>
 <h4> Gene expression </h4>
 <div class="container-fluid d-flex justify-content-left">
-  {{plot | safe}}
+  <div id="gene-plot"></div>
 </div>
+{% endif %}
+
+{% if show_results %}
+<script>
+    // Render plot from JSON data
+    {% if plot %}
+        var plotData = JSON.parse('{{ plot|escapejs }}');
+        Plotly.newPlot('gene-plot', plotData.data, plotData.layout, {responsive: true});
+    {% endif %}
+</script>
 {% endif %}
 
 {% endblock  %}

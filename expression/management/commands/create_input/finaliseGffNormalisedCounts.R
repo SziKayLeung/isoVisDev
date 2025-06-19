@@ -1,6 +1,5 @@
 library("data.table")
 library("dplyr")
-library("dplyr")
 library("stringr")
 
 
@@ -28,6 +27,17 @@ quote = F, row.names = F, col.names = F, sep = "\t")
 phenotype <- fread("/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/0_metadata/WholeTargetedphenotype_fixedsex.csv", data.table = F)
 counts <- fread("/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts_GroupSexDTE_TopAbundant.csv", data.table = F)
 counts <- merge(counts, phenotype, by = "sample")
+
+# structural category
+structural <- counts[,c("isoform","structural_category")]
+structural <- unique(structural)
+write.csv(structural, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts_category.csv", quote = F, row.names = F)
+
+# abundance
+abundance <- counts %>% group_by(isoform) %>% tally(normalised_counts)
+write.csv(abundance, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts_tallied.csv", quote = F, row.names = F)
+
+# finalise counts
 final <- counts %>% select(sample, associated_gene, isoform, normalised_counts, group, sex)
 colnames(final) <- c("sampleID","geneName","isoform","counts","group","sex")
 final$sampleID <- as.numeric(as.factor(final$sampleID))
@@ -35,8 +45,3 @@ final$sex <- as.factor(final$sex)
 final$group <- as.factor(final$group)
 final$counts <- round(final$counts, 2)
 write.csv(final, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts.csv", quote = F, row.names = F)
-
-# structural category of transcripts
-class.files <- fread("/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/C_Whole_Targeted/9_sqanti_final/sqantifiltered_monoexonicfiltered_2reads2samples_classification_finalversion.txt", data.table = F)
-subsetted.class.files <- class.files[class.files$isoform %in% final$isoform,c("isoform","structural_category")]
-write.csv(subsetted.class.files, "/lustre/projects/Research_Project-MRC190311/longReadSeq/ONTRNA/SFARI/webResource/NormalisedTranscriptCounts_category.csv", quote = F, row.names = F)

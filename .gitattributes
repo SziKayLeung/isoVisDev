@@ -1,5 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Use Git Large File Storage (LFS) for large files
 db.sqlite3 filter=lfs diff=lfs merge=lfs -text
 # Don't add these folders when creating archive file
 files/ export-ignore

@@ -2,13 +2,14 @@ from django.db import models
 
 # to make new model: python manage.py makemigrations, python manage.py migrate
 
-image = models.ImageField(upload_to='img')
+image = models.ImageField(upload_to="img")
+
 
 class Genesummary(models.Model):
     geneName = models.CharField(max_length=50)
     totalNum = models.PositiveIntegerField()
     novelNum = models.PositiveIntegerField()
-    
+
     def __str__(self):
         return self.geneName
 
@@ -20,7 +21,7 @@ class Genecounts(models.Model):
     counts = models.DecimalField(max_digits=10, decimal_places=2)
     group = models.CharField(max_length=2)
     sex = models.CharField(max_length=2)
-    
+
     def __str__(self):
         return self.geneName
 
@@ -33,9 +34,18 @@ class Transcriptcounts(models.Model):
     counts = models.DecimalField(max_digits=10, decimal_places=2)
     group = models.CharField(max_length=2)
     sex = models.CharField(max_length=2)
-    
+
     def __str__(self):
         return self.isoform
+
+
+class TranscriptCategory(models.Model):
+    isoform = models.CharField(max_length=20)
+    category = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.isoform
+
 
 # Transcript gtf
 class TranscriptFeature(models.Model):

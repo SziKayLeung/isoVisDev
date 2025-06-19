@@ -24,11 +24,11 @@
 
         <!-- Transcript Selection Form -->
         {% if show_transcript_form %}
-            <div class="container-fluid mb-4">
+            <div class="container-fluid mb-2">
                 <form method="POST" id="transcript-form">
                     {% csrf_token %}
                     <input type="hidden" name="filter_action" id="filter-action" value="">
-                    <div style="display: flex; gap: 70px; flex-wrap: wrap;">
+                    <div style="display: flex; column-gap: 50px; row-gap: 20px; flex-wrap: wrap;">
                         <!-- Transcript Selection -->
                         <div>
                             <div class="form-group">

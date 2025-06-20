@@ -52,175 +52,79 @@ def transcript_identify(request):
     }
 
     if request.method == "POST":
-        # Check if this is a filter action (updating transcript list based on category filters)
-        if request.POST.get("filter_action") == "filter":
-            gene_name = request.session.get("gene_name")
-            if gene_name:
-                # Get selected category filters
-                selected_categories = []
-                category_mapping = {
-                    "filter_fsm": "FSM",
-                    "filter_ism": "ISM",
-                    "filter_nic": "NIC",
-                    "filter_nnc": "NNC",
-                    "filter_gg": "GG",
-                }
-
-                for filter_name, category_code in category_mapping.items():
-                    if request.POST.get(filter_name):
-                        selected_categories.append(category_code)
-
-                # Get filtered transcripts
-                transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
-                if selected_categories:
-                    filtered_isoforms = TranscriptSummary.objects.filter(
-                        category__in=selected_categories
-                    ).values_list("isoform", flat=True)
-                    transcripts = transcripts.filter(isoform__in=filtered_isoforms)
-                else:
-                    # If no categories selected, show no transcripts
-                    transcripts = transcripts.none()
-
-                unique_transcripts = {
-                    transcript.isoform: transcript for transcript in transcripts
-                }.values()
-
-                if transcripts.exists():
-                    transcript_choices = [
-                        (t.isoform, t.isoform) for t in unique_transcripts
-                    ]
-                    transcript_form = TheForm()
-                    transcript_form.fields["Transcripts"].choices = transcript_choices
-
-                    # Update session with new categories
-                    request.session["selected_categories"] = selected_categories
-
-                    context.update(
-                        {
-                            "gene_form": GeneForm(initial={"gene_name": gene_name}),
-                            "transcript_form": transcript_form,
-                            "gene_name": gene_name,
-                            "show_transcript_form": True,
-                            "selected_categories": selected_categories,
-                        }
-                    )
-                else:
-                    # If no transcripts found, show empty transcript form without error
-                    transcript_form = TheForm()
-                    transcript_form.fields["Transcripts"].choices = []
-
-                    context.update(
-                        {
-                            "gene_form": GeneForm(initial={"gene_name": gene_name}),
-                            "transcript_form": transcript_form,
-                            "gene_name": gene_name,
-                            "show_transcript_form": True,
-                            "selected_categories": selected_categories,
-                        }
-                    )
-
-        # Check if the user submitted the gene form
-        elif "gene_name" in request.POST:
-            gene_form = GeneForm(request.POST)
-            if gene_form.is_valid():
+        # Handle gene search OR filter action (they do the same thing)
+        if request.POST.get("filter_action") == "filter" or "gene_name" in request.POST:
+            # Get gene name from form or session
+            if "gene_name" in request.POST:
+                gene_form = GeneForm(request.POST)
+                if not gene_form.is_valid():
+                    return render(request, "expression/transcript_level.html", context)
                 gene_name = gene_form.cleaned_data["gene_name"]
+                request.session["gene_name"] = gene_name
+            else:
+                gene_name = request.session.get("gene_name")
+                if not gene_name:
+                    return render(request, "expression/transcript_level.html", context)
 
-                # Get selected category filters (default to all for initial search)
-                selected_categories = []
-                category_mapping = {
-                    "filter_fsm": "FSM",
-                    "filter_ism": "ISM",
-                    "filter_nic": "NIC",
-                    "filter_nnc": "NNC",
-                    "filter_gg": "GG",
-                }
+            # Get selected categories
+            category_mapping = {
+                "filter_fsm": "FSM",
+                "filter_ism": "ISM",
+                "filter_nic": "NIC",
+                "filter_nnc": "NNC",
+                "filter_gg": "GG",
+            }
 
-                for filter_name, category_code in category_mapping.items():
-                    if request.POST.get(filter_name):
-                        selected_categories.append(category_code)
+            selected_categories = []
+            for filter_name, category_code in category_mapping.items():
+                if request.POST.get(filter_name):
+                    selected_categories.append(category_code)
 
-                # If this is initial gene search (no checkboxes in POST), default to all categories
-                checkbox_in_post = any(
-                    request.POST.get(filter_name)
-                    for filter_name in category_mapping.keys()
+            # Default to all categories if none selected and this is initial gene search
+            if not selected_categories and "gene_name" in request.POST:
+                selected_categories = list(category_mapping.values())
+
+            # Get and filter transcripts
+            transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
+
+            if not transcripts.exists():
+                context.update(
+                    {
+                        "gene_form": GeneForm(initial={"gene_name": gene_name}),
+                        "error_message": f"Gene '{gene_name}' not found in our dataset",
+                        "show_transcript_form": False,
+                    }
                 )
-                if not checkbox_in_post:
-                    selected_categories = list(category_mapping.values())
+                return render(request, "expression/transcript_level.html", context)
 
-                # Get transcripts for the gene
-                transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
+            if selected_categories:
+                filtered_isoforms = TranscriptSummary.objects.filter(
+                    category__in=selected_categories
+                ).values_list("isoform", flat=True)
+                transcripts = transcripts.filter(isoform__in=filtered_isoforms)
+            else:
+                transcripts = transcripts.none()
 
-                # Check if the gene exists at all
-                if not transcripts.exists():
-                    context.update(
-                        {
-                            "gene_form": gene_form,
-                            "error_message": f"Gene '{gene_name}' not found in our dataset",
-                            "show_transcript_form": False,
-                        }
-                    )
-                else:
-                    # Filter transcripts by category if TranscriptCategory data exists
-                    if selected_categories:
-                        # Get isoforms that match the selected categories
-                        filtered_isoforms = TranscriptSummary.objects.filter(
-                            category__in=selected_categories
-                        ).values_list("isoform", flat=True)
+            # Create transcript form
+            unique_transcripts = {t.isoform: t for t in transcripts}.values()
+            transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
+            transcript_form = TheForm()
+            transcript_form.fields["Transcripts"].choices = transcript_choices
 
-                        # Filter transcripts to only include those with matching categories
-                        transcripts = transcripts.filter(isoform__in=filtered_isoforms)
-                    else:
-                        # If no categories selected, show no transcripts
-                        transcripts = transcripts.none()
+            # Store in session
+            request.session["selected_categories"] = selected_categories
 
-                    unique_transcripts = {
-                        transcript.isoform: transcript for transcript in transcripts
-                    }.values()
+            context.update(
+                {
+                    "gene_form": GeneForm(initial={"gene_name": gene_name}),
+                    "transcript_form": transcript_form,
+                    "gene_name": gene_name,
+                    "show_transcript_form": True,
+                    "selected_categories": selected_categories,
+                }
+            )
 
-                    if transcripts.exists():
-                        # Create choices for the dropdown based on the filtered transcripts
-                        transcript_choices = [
-                            (t.isoform, t.isoform) for t in unique_transcripts
-                        ]
-                        print("Available transcript choices:", transcript_choices)
-
-                        # Initialize the multiple selection form with transcript choices
-                        transcript_form = TheForm()  # No POST data here
-                        transcript_form.fields[
-                            "Transcripts"
-                        ].choices = transcript_choices
-
-                        # Store gene_name and selected categories in session for later use
-                        request.session["gene_name"] = gene_name
-                        request.session["selected_categories"] = selected_categories
-
-                        # Update context to show transcript selection form
-                        context.update(
-                            {
-                                "gene_form": gene_form,
-                                "transcript_form": transcript_form,
-                                "gene_name": gene_name,
-                                "show_transcript_form": True,
-                                "selected_categories": selected_categories,
-                            }
-                        )
-
-                    else:
-                        # If no transcripts found, show empty transcript form without error
-                        transcript_form = TheForm()
-                        transcript_form.fields["Transcripts"].choices = []
-
-                        context.update(
-                            {
-                                "gene_form": gene_form,
-                                "transcript_form": transcript_form,
-                                "gene_name": gene_name,
-                                "show_transcript_form": True,
-                                "selected_categories": selected_categories,
-                            }
-                        )
-
-        # Check if the user submitted the transcript selection form
+        # Handle transcript selection
         else:
             transcript_form = TheForm(request.POST)
             gene_name = request.session.get("gene_name")
@@ -228,44 +132,39 @@ def transcript_identify(request):
                 "selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"]
             )
 
-            # Re-fetch transcripts based on the stored gene_name and categories
+            # Re-fetch transcripts for form validation
             transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
-
-            # Apply category filtering
             if selected_categories:
                 filtered_isoforms = TranscriptSummary.objects.filter(
                     category__in=selected_categories
                 ).values_list("isoform", flat=True)
                 transcripts = transcripts.filter(isoform__in=filtered_isoforms)
 
-            unique_transcripts = {
-                transcript.isoform: transcript for transcript in transcripts
-            }.values()
+            unique_transcripts = {t.isoform: t for t in transcripts}.values()
             transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
             transcript_form.fields["Transcripts"].choices = transcript_choices
+
+            base_context = {
+                "gene_form": GeneForm(),
+                "transcript_form": transcript_form,
+                "gene_name": gene_name,
+                "show_transcript_form": True,
+                "selected_categories": selected_categories,
+            }
 
             if transcript_form.is_valid():
                 selected_transcripts = transcript_form.cleaned_data["Transcripts"]
 
-                # Check if transcripts are actually selected for final submission
                 if not selected_transcripts:
-                    context.update(
-                        {
-                            "gene_form": GeneForm(),
-                            "transcript_form": transcript_form,
-                            "gene_name": gene_name,
-                            "show_transcript_form": True,
-                            "error_message": "Please select at least one transcript.",
-                            "selected_categories": selected_categories,
-                        }
+                    base_context["error_message"] = (
+                        "Please select at least one transcript."
                     )
+                    context.update(base_context)
                 else:
-                    # transcript structure
+                    # Generate plots
                     plotStructure = transript_visualisation(
                         gene_name, selected_transcripts[0]
                     )
-
-                    # boxplot
                     selected_transcript_expression_df = Transcriptcounts.objects.filter(
                         isoform=selected_transcripts[0]
                     )
@@ -274,33 +173,17 @@ def transcript_identify(request):
                     )
                     plotExpression = gene_boxplot(expression_df)
 
-                    print("Selected transcripts:", selected_transcripts)
-
-                    # Update context to show both transcript form and results
-                    context.update(
+                    base_context.update(
                         {
-                            "gene_form": GeneForm(),
-                            "transcript_form": transcript_form,
                             "selected_transcripts": selected_transcripts,
                             "plotStructure": plotStructure,
                             "plotExpression": plotExpression,
-                            "gene_name": gene_name,
-                            "show_transcript_form": True,
                             "show_results": True,
-                            "selected_categories": selected_categories,
                         }
                     )
+                    context.update(base_context)
             else:
-                print("Form is not valid:", transcript_form.errors)
-                context.update(
-                    {
-                        "gene_form": GeneForm(),
-                        "transcript_form": transcript_form,
-                        "gene_name": gene_name,
-                        "show_transcript_form": True,
-                        "error_message": "Please select at least one transcript.",
-                        "selected_categories": selected_categories,
-                    }
-                )
+                base_context["error_message"] = "Please select at least one transcript."
+                context.update(base_context)
 
     return render(request, "expression/transcript_level.html", context)

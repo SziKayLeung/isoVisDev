@@ -2,7 +2,7 @@ import pandas as pd
 from django.shortcuts import render
 
 from .forms import GeneForm, TheForm
-from .models import Genecounts, Genesummary, TranscriptCategory, Transcriptcounts
+from .models import Genecounts, Genesummary, Transcriptcounts, TranscriptSummary
 from .utils.plotting import gene_boxplot, transript_visualisation
 
 
@@ -73,7 +73,7 @@ def transcript_identify(request):
                 # Get filtered transcripts
                 transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
                 if selected_categories:
-                    filtered_isoforms = TranscriptCategory.objects.filter(
+                    filtered_isoforms = TranscriptSummary.objects.filter(
                         category__in=selected_categories
                     ).values_list("isoform", flat=True)
                     transcripts = transcripts.filter(isoform__in=filtered_isoforms)
@@ -163,7 +163,7 @@ def transcript_identify(request):
                     # Filter transcripts by category if TranscriptCategory data exists
                     if selected_categories:
                         # Get isoforms that match the selected categories
-                        filtered_isoforms = TranscriptCategory.objects.filter(
+                        filtered_isoforms = TranscriptSummary.objects.filter(
                             category__in=selected_categories
                         ).values_list("isoform", flat=True)
 
@@ -233,7 +233,7 @@ def transcript_identify(request):
 
             # Apply category filtering
             if selected_categories:
-                filtered_isoforms = TranscriptCategory.objects.filter(
+                filtered_isoforms = TranscriptSummary.objects.filter(
                     category__in=selected_categories
                 ).values_list("isoform", flat=True)
                 transcripts = transcripts.filter(isoform__in=filtered_isoforms)

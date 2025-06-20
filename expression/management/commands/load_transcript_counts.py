@@ -45,4 +45,4 @@ class Command(BaseCommand):
             Transcriptcount.save()
 
     def __str__(self):
-        return self.title
+        return self.help

@@ -39,9 +39,10 @@ class Transcriptcounts(models.Model):
         return self.isoform
 
 
-class TranscriptCategory(models.Model):
+class TranscriptSummary(models.Model):
     isoform = models.CharField(max_length=20)
     category = models.CharField(max_length=20)
+    counts = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.isoform

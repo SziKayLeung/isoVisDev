@@ -1,6 +1,6 @@
 import logging
 import os
-from io import BytesIO
+from io import StringIO
 
 import boto3
 import pandas as pd
@@ -13,7 +13,7 @@ logger = logging.getLogger("isoVisDev")
 
 def fetch_gene_data_from_s3(gene_name):
     """
-    Fetch gene data from AWS S3 bucket.
+    Fetch gene data from AWS S3 bucket or local storage.
 
     Args:
         gene_name (str): The name of the gene to fetch data for
@@ -26,14 +26,14 @@ def fetch_gene_data_from_s3(gene_name):
         s3_client = boto3.client("s3")
 
         bucket_name = "gene-data-bucket"
-        object_key = f"parquet/{gene_name}.parquet"
+        object_key = f"{gene_name}.txt"  # Files are in top level of bucket
 
         # Fetch the object from S3 bucket
         response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+        content = response["Body"].read().decode("utf-8")
 
-        # Read parquet data directly from bytes
-        parquet_data = response["Body"].read()
-        df = pd.read_parquet(BytesIO(parquet_data))
+        # Convert to DataFrame
+        df = pd.read_csv(StringIO(content), sep="\t")
         return df
 
     except ClientError as e:
@@ -41,14 +41,12 @@ def fetch_gene_data_from_s3(gene_name):
 
         # Try getting file from local storage as a fallback - this is just for running locally in development
         dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        parquet_path = os.path.join(
-            dir_path, "static", "parquet", f"{gene_name}.parquet"
-        )
+        txt_path = os.path.join(dir_path, "static", f"{gene_name}.txt")
         try:
-            df = pd.read_parquet(parquet_path)
+            df = pd.read_csv(txt_path, sep="\t")
             return df
         except FileNotFoundError:
-            logger.error(f"Local parquet file not found for gene {gene_name}")
+            logger.error(f"Local txt file not found for gene {gene_name}")
             raise
         except Exception as local_e:
             logger.error(f"Error reading local gene data for {gene_name}: {local_e}")

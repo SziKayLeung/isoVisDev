@@ -32,7 +32,7 @@
                 <form method="POST" id="transcript-form">
                     {% csrf_token %}
                     <input type="hidden" name="filter_action" id="filter-action" value="">
-                    <div style="display: flex; column-gap: 50px; row-gap: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; column-gap: 70px; row-gap: 20px; flex-wrap: wrap;">
                         <!-- Transcript Selection -->
                         <div>
                             <div class="form-group">
@@ -87,13 +87,26 @@
                                         <label class="form-check-label" for="filter-GG">
                                             Genic Genomic
                                         </label>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+                        <!-- Normalised Counts Slider -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 250px;">
+                            <label for="normalised-counts-slider" style="margin-bottom: 8px;">Normalised Counts:</label>
+                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                <span style="min-width: 12px;">0</span>
+                                <input type="range" class="form-range" id="normalised-counts-slider" min="0" max="100" value="50" style="flex: 1;" oninput="document.getElementById('normalised-counts-value').textContent = this.value">
+                                <span style="min-width: 24px;">100</span>
+                            </div>
+                            <div style="width: 100%; text-align: center; margin-top: 4px;">
+                                <span id="normalised-counts-value">50</span>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Submit Button on new line -->
-                    <div style="flex-basis: 100%;">
+                    <div style="flex-basis: 100%; margin-top: 16px;">
                         <button type="submit" class="btn btn-primary">{% if show_results %}Update Results{% else %}Submit{% endif %}</button>
                     </div>
                 </form>

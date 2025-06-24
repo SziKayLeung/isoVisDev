@@ -161,13 +161,13 @@
         {% if show_results %}
             <hr class="mb-4">
             <div class="mt-4">
-                <h1>{{ gene_name }}</h1>
+                <h2>{{ gene_name }}</h2>
                 <br>
                 <div>
                     {% for transcript in selected_transcripts %}
-                        <span><h4>{{ transcript }}</h4></span>{% if not forloop.last %}, {% endif %}
-                    {% empty %}
-                        <span>No transcripts selected.</span>
+                        {% if forloop.first %}
+                            <span><h4>{{ transcript }}</h4></span>
+                        {% endif %}
                     {% endfor %}
                 </div>
            

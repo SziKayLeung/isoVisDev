@@ -91,18 +91,50 @@
                                 </div>
                             </div>
                         </div>
+
                         <!-- Normalised Counts Slider -->
                         <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 250px;">
                             <label for="normalised-counts-slider" style="margin-bottom: 8px;">Normalised Counts:</label>
                             <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
                                 <span style="min-width: 12px;">0</span>
-                                <input type="range" class="form-range" id="normalised-counts-slider" min="0" max="100" value="50" style="flex: 1;" oninput="document.getElementById('normalised-counts-value').textContent = this.value">
+                                <div style="flex: 1; position: relative;">
+                                    <input type="range" class="form-range" id="normalised-counts-slider" min="0" max="100" value="50" style="width: 100%;" 
+                                        oninput="updateSliderValuePosition(this)">
+                                    <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">50</div>
+                                </div>
                                 <span style="min-width: 24px;">100</span>
                             </div>
-                            <div style="width: 100%; text-align: center; margin-top: 4px;">
-                                <span id="normalised-counts-value">50</span>
-                            </div>
                         </div>
+                        
+                        <script>
+                            function updateSliderValuePosition(slider) {
+                                const value = slider.value;
+                                const valueLabel = document.getElementById('normalised-counts-value');
+                                
+                                // Update the text content
+                                valueLabel.textContent = value;
+                                
+                                // Calculate position
+                                const percent = (value - slider.min) / (slider.max - slider.min);
+                                const sliderWidth = slider.offsetWidth;
+                                const thumbOffset = percent * sliderWidth;
+                                
+                                // Position the value label
+                                valueLabel.style.left = thumbOffset + 'px';
+                            }
+                            
+                            // Initialize position on page load
+                            window.addEventListener('load', function() {
+                                const slider = document.getElementById('normalised-counts-slider');
+                                updateSliderValuePosition(slider);
+                            });
+                            
+                            // Update position on window resize
+                            window.addEventListener('resize', function() {
+                                const slider = document.getElementById('normalised-counts-slider');
+                                updateSliderValuePosition(slider);
+                            });
+                        </script>
                     </div>
                     
                     <!-- Submit Button on new line -->

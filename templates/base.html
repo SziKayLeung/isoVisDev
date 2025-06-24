@@ -17,14 +17,14 @@
         <div class="d-flex justify-content-between px-5 mx-auto" style="width: 90%;">
             <span class="navbar-text text-white">Long-Read Brain Transcriptome Dataset</span>
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link active" href="{% url 'home' %}">Home</a>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Home</a>
                 </li>
-                <li class="nav-item active">
-                    <a class="nav-link active" href="{% url 'expression:summary' %}">Summary</a>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'expression' and request.resolver_match.url_name == 'summary' %}active{% endif %}" href="{% url 'expression:summary' %}">Summary</a>
                 </li>
-                <li class="nav-item active">
-                    <a class="nav-link active" href="{% url 'expression:transcript' %}">Transcript Level</a>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.app_name == 'expression' and request.resolver_match.url_name == 'transcript' %}active{% endif %}" href="{% url 'expression:transcript' %}">Transcript Level</a>
                 </li>
             </ul>
         </div>

@@ -28,7 +28,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "isoforms-rse-env.eba-3f5qqpmj.eu-north-1.elasticbeanstalk.com",
-    ".isoforms.com",  # allows any subdomain (e.g. www) or root domain
+    "isoforms.com",
+    "www.isoforms.com",
     "localhost",
     "127.0.0.1",
 ]
@@ -59,6 +60,8 @@ MIDDLEWARE = [
 ]
 
 USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ROOT_URLCONF = "isoVisDev.urls"
 
@@ -155,9 +158,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(
-                BASE_DIR, "django_errors.log"
-            ),  # Change this path if needed
+            "filename": os.path.join(BASE_DIR, "django_errors.log"),  # Change this path if needed
             "formatter": "verbose",
         },
         "console": {

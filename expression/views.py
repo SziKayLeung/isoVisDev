@@ -1,4 +1,5 @@
 import pandas as pd
+from django.db import models
 from django.shortcuts import render
 
 from .forms import GeneForm, TheForm
@@ -78,11 +79,19 @@ def transcript_identify(request):
                 # Store the unique transcript names in the session
                 request.session["transcripts"] = unique_transcripts
 
+                # Calculate max counts for this gene's transcripts
+                max_counts = TranscriptSummary.objects.filter(isoform__in=unique_transcripts).aggregate(
+                    max_count=models.Max("counts")
+                )["max_count"]
+                max_counts_int = int(max_counts) if max_counts else 100
+                request.session["max_counts"] = max_counts_int
+
             else:
                 gene_name = request.session.get("gene_name")
                 if not gene_name:
                     return render(request, "expression/transcript_level.html", context)
                 unique_transcripts = request.session.get("transcripts", [])
+                max_counts_int = request.session.get("max_counts", 100)
 
             # Get selected categories
             category_mapping = {
@@ -141,6 +150,7 @@ def transcript_identify(request):
                     "show_transcript_form": True,
                     "selected_categories": selected_categories,
                     "counts_threshold": counts_threshold,
+                    "max_counts": max_counts_int,
                 }
             )
 
@@ -150,6 +160,7 @@ def transcript_identify(request):
             gene_name = request.session.get("gene_name")
             unique_transcripts = request.session.get("transcripts")
             selected_categories = request.session.get("selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"])
+            max_counts_int = request.session.get("max_counts", 100)
 
             # Get the counts threshold from the session
             counts_threshold = request.session.get("counts_threshold", 0)
@@ -183,6 +194,7 @@ def transcript_identify(request):
                 "show_transcript_form": True,
                 "selected_categories": selected_categories,
                 "counts_threshold": counts_threshold,
+                "max_counts": max_counts_int,
             }
 
             if transcript_form.is_valid():

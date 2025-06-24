@@ -98,11 +98,11 @@
                             <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
                                 <span style="min-width: 12px;">0</span>
                                 <div style="flex: 1; position: relative;">
-                                    <input type="range" class="form-range" id="normalised-counts-slider" name="counts_threshold" min="0" max="100" value="{{ counts_threshold|default:0 }}" style="width: 100%;" 
+                                    <input type="range" class="form-range" id="normalised-counts-slider" name="counts_threshold" min="0" max="{{ max_counts|default:100 }}" value="{{ counts_threshold|default:0 }}" style="width: 100%;" 
                                         oninput="updateSliderValuePosition(this)" onchange="filterTranscripts()">
                                     <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">{{ counts_threshold|default:0 }}</div>
                                 </div>
-                                <span style="min-width: 24px;">100</span>
+                                <span style="min-width: 24px;">{{ max_counts|default:100 }}</span>
                             </div>
                         </div>
                         

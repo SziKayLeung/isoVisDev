@@ -96,13 +96,12 @@
                         <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 250px;">
                             <label for="normalised-counts-slider" style="margin-bottom: 8px;">Normalised Counts:</label>
                             <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                <span style="min-width: 12px;">0</span>
                                 <div style="flex: 1; position: relative;">
                                     <input type="range" class="form-range" id="normalised-counts-slider" name="counts_threshold" min="0" max="{{ max_counts|default:100 }}" value="{{ counts_threshold|default:0 }}" style="width: 100%;" 
                                         oninput="updateSliderValuePosition(this)" onchange="filterTranscripts()">
                                     <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">{{ counts_threshold|default:0 }}</div>
                                 </div>
-                                <span style="min-width: 24px;">{{ max_counts|default:100 }}</span>
+                                <span style="min-width: 24px; margin-top: -6px;">{{ max_counts|default:100 }}</span>
                             </div>
                         </div>
                         
@@ -114,10 +113,14 @@
                                 // Update the text content
                                 valueLabel.textContent = value;
                                 
-                                // Calculate position
+                                // Calculate position with thumb offset compensation
                                 const percent = (value - slider.min) / (slider.max - slider.min);
-                                const sliderWidth = slider.offsetWidth;
-                                const thumbOffset = percent * sliderWidth;
+                                const sliderWidth = slider.clientWidth;
+                                
+                                // Estimate thumb width (typically 16-20px, but can vary)
+                                const thumbWidth = 16;
+                                const availableWidth = sliderWidth - thumbWidth;
+                                const thumbOffset = (availableWidth * percent) + (thumbWidth / 2);
                                 
                                 // Position the value label
                                 valueLabel.style.left = thumbOffset + 'px';

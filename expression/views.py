@@ -61,10 +61,30 @@ def transcript_identify(request):
                     return render(request, "expression/transcript_level.html", context)
                 gene_name = gene_form.cleaned_data["gene_name"]
                 request.session["gene_name"] = gene_name
+
+                transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
+
+                if not transcripts.exists():
+                    context.update(
+                        {
+                            "gene_form": GeneForm(initial={"gene_name": gene_name}),
+                            "error_message": f"Gene '{gene_name}' not found in our dataset",
+                            "show_transcript_form": False,
+                        }
+                    )
+                    return render(request, "expression/transcript_level.html", context)
+
+                unique_transcripts = list(
+                    transcripts.values_list("isoform", flat=True).distinct()
+                )
+                # Store the unique transcript names in the session
+                request.session["transcripts"] = unique_transcripts
+
             else:
                 gene_name = request.session.get("gene_name")
                 if not gene_name:
                     return render(request, "expression/transcript_level.html", context)
+                unique_transcripts = request.session.get("transcripts", [])
 
             # Get selected categories
             category_mapping = {
@@ -84,19 +104,6 @@ def transcript_identify(request):
             if not selected_categories and "gene_name" in request.POST:
                 selected_categories = list(category_mapping.values())
 
-            # Get and filter transcripts
-            transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
-
-            if not transcripts.exists():
-                context.update(
-                    {
-                        "gene_form": GeneForm(initial={"gene_name": gene_name}),
-                        "error_message": f"Gene '{gene_name}' not found in our dataset",
-                        "show_transcript_form": False,
-                    }
-                )
-                return render(request, "expression/transcript_level.html", context)
-
             # Get the slider value for count threshold
             counts_threshold = request.POST.get("counts_threshold", "0")
             try:
@@ -107,32 +114,25 @@ def transcript_identify(request):
             # Store for the template
             request.session["counts_threshold"] = counts_threshold
 
-            # Filter by category
+            # Filter
             if selected_categories:
-                # First get isoforms that match the category filter
                 filtered_isoforms = TranscriptSummary.objects.filter(
-                    category__in=selected_categories
+                    category__in=selected_categories,
+                    counts__gte=counts_threshold,
+                    isoform__in=unique_transcripts,
                 )
-
-                # Then further filter by the count threshold
-                if counts_threshold > 0:
-                    filtered_isoforms = filtered_isoforms.filter(
-                        counts__gte=counts_threshold
-                    )
 
                 # Get just the isoform names
-                filtered_isoform_names = filtered_isoforms.values_list(
-                    "isoform", flat=True
+                filtered_isoform_names = list(
+                    filtered_isoforms.values_list("isoform", flat=True)
                 )
-
-                # Finally filter transcripts
-                transcripts = transcripts.filter(isoform__in=filtered_isoform_names)
             else:
-                transcripts = transcripts.none()
+                filtered_isoform_names = []
 
             # Create transcript form
-            unique_transcripts = {t.isoform: t for t in transcripts}.values()
-            transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
+            transcript_choices = [
+                (isoform, isoform) for isoform in filtered_isoform_names
+            ]
             transcript_form = TheForm()
             transcript_form.fields["Transcripts"].choices = transcript_choices
 
@@ -154,6 +154,7 @@ def transcript_identify(request):
         else:
             transcript_form = TheForm(request.POST)
             gene_name = request.session.get("gene_name")
+            unique_transcripts = request.session.get("transcripts")
             selected_categories = request.session.get(
                 "selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"]
             )
@@ -165,30 +166,26 @@ def transcript_identify(request):
             except ValueError:
                 counts_threshold = 0.0
 
-            # Re-fetch transcripts for form validation
-            transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
+            # Re-filter transcripts for form validation
             if selected_categories:
-                # First get isoforms that match the category filter
                 filtered_isoforms = TranscriptSummary.objects.filter(
-                    category__in=selected_categories
+                    category__in=selected_categories,
+                    counts__gte=counts_threshold,
+                    isoform__in=unique_transcripts,
                 )
-
-                # Then further filter by the count threshold
-                if counts_threshold > 0:
-                    filtered_isoforms = filtered_isoforms.filter(
-                        counts__gte=counts_threshold
-                    )
 
                 # Get just the isoform names
-                filtered_isoform_names = filtered_isoforms.values_list(
-                    "isoform", flat=True
+                filtered_isoform_names = list(
+                    filtered_isoforms.values_list("isoform", flat=True)
                 )
+            else:
+                filtered_isoform_names = []
 
-                # Finally filter transcripts
-                transcripts = transcripts.filter(isoform__in=filtered_isoform_names)
+            # Create transcript form
+            transcript_choices = [
+                (isoform, isoform) for isoform in filtered_isoform_names
+            ]
 
-            unique_transcripts = {t.isoform: t for t in transcripts}.values()
-            transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
             transcript_form.fields["Transcripts"].choices = transcript_choices
 
             base_context = {

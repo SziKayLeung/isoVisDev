@@ -97,11 +97,36 @@ def transcript_identify(request):
                 )
                 return render(request, "expression/transcript_level.html", context)
 
+            # Get the slider value for count threshold
+            counts_threshold = request.POST.get("counts_threshold", "0")
+            try:
+                counts_threshold = float(counts_threshold)
+            except ValueError:
+                counts_threshold = 0.0
+
+            # Store for the template
+            request.session["counts_threshold"] = counts_threshold
+
+            # Filter by category
             if selected_categories:
+                # First get isoforms that match the category filter
                 filtered_isoforms = TranscriptSummary.objects.filter(
                     category__in=selected_categories
-                ).values_list("isoform", flat=True)
-                transcripts = transcripts.filter(isoform__in=filtered_isoforms)
+                )
+
+                # Then further filter by the count threshold
+                if counts_threshold > 0:
+                    filtered_isoforms = filtered_isoforms.filter(
+                        counts__gte=counts_threshold
+                    )
+
+                # Get just the isoform names
+                filtered_isoform_names = filtered_isoforms.values_list(
+                    "isoform", flat=True
+                )
+
+                # Finally filter transcripts
+                transcripts = transcripts.filter(isoform__in=filtered_isoform_names)
             else:
                 transcripts = transcripts.none()
 
@@ -121,6 +146,7 @@ def transcript_identify(request):
                     "gene_name": gene_name,
                     "show_transcript_form": True,
                     "selected_categories": selected_categories,
+                    "counts_threshold": counts_threshold,
                 }
             )
 
@@ -132,13 +158,34 @@ def transcript_identify(request):
                 "selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"]
             )
 
+            # Get the counts threshold from the session
+            counts_threshold = request.session.get("counts_threshold", 0)
+            try:
+                counts_threshold = float(counts_threshold)
+            except ValueError:
+                counts_threshold = 0.0
+
             # Re-fetch transcripts for form validation
             transcripts = Transcriptcounts.objects.filter(geneName=gene_name)
             if selected_categories:
+                # First get isoforms that match the category filter
                 filtered_isoforms = TranscriptSummary.objects.filter(
                     category__in=selected_categories
-                ).values_list("isoform", flat=True)
-                transcripts = transcripts.filter(isoform__in=filtered_isoforms)
+                )
+
+                # Then further filter by the count threshold
+                if counts_threshold > 0:
+                    filtered_isoforms = filtered_isoforms.filter(
+                        counts__gte=counts_threshold
+                    )
+
+                # Get just the isoform names
+                filtered_isoform_names = filtered_isoforms.values_list(
+                    "isoform", flat=True
+                )
+
+                # Finally filter transcripts
+                transcripts = transcripts.filter(isoform__in=filtered_isoform_names)
 
             unique_transcripts = {t.isoform: t for t in transcripts}.values()
             transcript_choices = [(t.isoform, t.isoform) for t in unique_transcripts]
@@ -150,6 +197,7 @@ def transcript_identify(request):
                 "gene_name": gene_name,
                 "show_transcript_form": True,
                 "selected_categories": selected_categories,
+                "counts_threshold": counts_threshold,
             }
 
             if transcript_form.is_valid():

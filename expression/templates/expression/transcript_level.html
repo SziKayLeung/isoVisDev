@@ -98,9 +98,9 @@
                             <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
                                 <span style="min-width: 12px;">0</span>
                                 <div style="flex: 1; position: relative;">
-                                    <input type="range" class="form-range" id="normalised-counts-slider" min="0" max="100" value="50" style="width: 100%;" 
-                                        oninput="updateSliderValuePosition(this)">
-                                    <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">50</div>
+                                    <input type="range" class="form-range" id="normalised-counts-slider" name="counts_threshold" min="0" max="100" value="{{ counts_threshold|default:0 }}" style="width: 100%;" 
+                                        oninput="updateSliderValuePosition(this)" onchange="filterTranscripts()">
+                                    <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">{{ counts_threshold|default:0 }}</div>
                                 </div>
                                 <span style="min-width: 24px;">100</span>
                             </div>
@@ -133,6 +133,15 @@
                             window.addEventListener('resize', function() {
                                 const slider = document.getElementById('normalised-counts-slider');
                                 updateSliderValuePosition(slider);
+                            });
+                            
+                            // Delay the filter when sliding to prevent too many requests
+                            let sliderTimer;
+                            document.getElementById('normalised-counts-slider').addEventListener('input', function() {
+                                clearTimeout(sliderTimer);
+                                sliderTimer = setTimeout(function() {
+                                    filterTranscripts();
+                                }, 500); // Wait 500ms after sliding stops
                             });
                         </script>
                     </div>

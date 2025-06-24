@@ -74,9 +74,7 @@ def transcript_identify(request):
                     )
                     return render(request, "expression/transcript_level.html", context)
 
-                unique_transcripts = list(
-                    transcripts.values_list("isoform", flat=True).distinct()
-                )
+                unique_transcripts = list(transcripts.values_list("isoform", flat=True).distinct())
                 # Store the unique transcript names in the session
                 request.session["transcripts"] = unique_transcripts
 
@@ -123,16 +121,12 @@ def transcript_identify(request):
                 )
 
                 # Get just the isoform names
-                filtered_isoform_names = list(
-                    filtered_isoforms.values_list("isoform", flat=True)
-                )
+                filtered_isoform_names = list(filtered_isoforms.values_list("isoform", flat=True))
             else:
                 filtered_isoform_names = []
 
             # Create transcript form
-            transcript_choices = [
-                (isoform, isoform) for isoform in filtered_isoform_names
-            ]
+            transcript_choices = [(isoform, isoform) for isoform in filtered_isoform_names]
             transcript_form = TheForm()
             transcript_form.fields["Transcripts"].choices = transcript_choices
 
@@ -155,9 +149,7 @@ def transcript_identify(request):
             transcript_form = TheForm(request.POST)
             gene_name = request.session.get("gene_name")
             unique_transcripts = request.session.get("transcripts")
-            selected_categories = request.session.get(
-                "selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"]
-            )
+            selected_categories = request.session.get("selected_categories", ["FSM", "ISM", "NIC", "NNC", "GG"])
 
             # Get the counts threshold from the session
             counts_threshold = request.session.get("counts_threshold", 0)
@@ -175,16 +167,12 @@ def transcript_identify(request):
                 )
 
                 # Get just the isoform names
-                filtered_isoform_names = list(
-                    filtered_isoforms.values_list("isoform", flat=True)
-                )
+                filtered_isoform_names = list(filtered_isoforms.values_list("isoform", flat=True))
             else:
                 filtered_isoform_names = []
 
             # Create transcript form
-            transcript_choices = [
-                (isoform, isoform) for isoform in filtered_isoform_names
-            ]
+            transcript_choices = [(isoform, isoform) for isoform in filtered_isoform_names]
 
             transcript_form.fields["Transcripts"].choices = transcript_choices
 
@@ -201,21 +189,13 @@ def transcript_identify(request):
                 selected_transcripts = transcript_form.cleaned_data["Transcripts"]
 
                 if not selected_transcripts:
-                    base_context["error_message"] = (
-                        "Please select at least one transcript."
-                    )
+                    base_context["error_message"] = "Please select at least one transcript."
                     context.update(base_context)
                 else:
                     # Generate plots
-                    plotStructure = transript_visualisation(
-                        gene_name, selected_transcripts[0]
-                    )
-                    selected_transcript_expression_df = Transcriptcounts.objects.filter(
-                        isoform=selected_transcripts[0]
-                    )
-                    expression_df = pd.DataFrame(
-                        list(selected_transcript_expression_df.values())
-                    )
+                    plotStructure = transript_visualisation(gene_name, selected_transcripts[0])
+                    selected_transcript_expression_df = Transcriptcounts.objects.filter(isoform=selected_transcripts[0])
+                    expression_df = pd.DataFrame(list(selected_transcript_expression_df.values()))
                     plotExpression = gene_boxplot(expression_df)
 
                     base_context.update(

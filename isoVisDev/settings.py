@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-t-n*(rbzl@29toox-%zh16z^$8jnslm4kddj*x0pazut#y9t!h"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "isoforms-rse-env.eba-3f5qqpmj.eu-north-1.elasticbeanstalk.com",
@@ -60,7 +60,7 @@ MIDDLEWARE = [
 ]
 
 USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ROOT_URLCONF = "isoVisDev.urls"

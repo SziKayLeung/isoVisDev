@@ -34,16 +34,33 @@ class Command(BaseCommand):
         # Show this before loading the data into the database
         print("Loading gene counts data")
 
-        # Code to load the data into database
-        for row in DictReader(open("./expression/files/NormalisedGeneCounts.csv")):
-            Genecount = Genecounts(
-                sampleID=row["sampleID"],
-                geneName=row["geneName"],
-                counts=row["counts"],
-                group=row["group"],
-                sex=row["sex"],
-            )
-            Genecount.save()
+        batch_size = 10000  # Adjust this based on your memory
+        batch = []
+
+        with open("./expression/files/NormalisedGeneCounts.csv") as csvfile:
+            for i, row in enumerate(DictReader(csvfile)):
+                batch.append(
+                    Genecounts(
+                        sampleID=row["sampleID"],
+                        geneName=row["geneName"],
+                        counts=row["counts"],
+                        group=row["group"],
+                        sex=row["sex"],
+                    )
+                )
+
+                if len(batch) >= batch_size:
+                    Genecounts.objects.bulk_create(batch)
+                    batch = []
+
+                if i % 50000 == 0:
+                    print(f"Processed {i} rows...")
+
+            # Don't forget the last batch
+            if batch:
+                Genecounts.objects.bulk_create(batch)
+
+        print("Loading complete!")
 
     def __str__(self):
-        return self.title
+        return self.help

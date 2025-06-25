@@ -49,8 +49,9 @@ class Command(BaseCommand):
                 if len(batch) >= batch_size:
                     Transcriptcounts.objects.bulk_create(batch)
                     batch = []
-                    if i % 100000 == 0:
-                        print(f"Processed {i} rows...")
+
+                if i % 100000 == 0:
+                    print(f"Processed {i} rows...")
 
             # Don't forget the last batch
             if batch:

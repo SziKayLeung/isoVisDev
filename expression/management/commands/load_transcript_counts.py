@@ -30,19 +30,33 @@ class Command(BaseCommand):
         # Show this before loading the data into the database
         print("Loading transcript counts")
 
-        # Code to load the data into database
-        for row in DictReader(
-            open("./expression/files/NormalisedTranscriptCounts.csv")
-        ):
-            Transcriptcount = Transcriptcounts(
-                sampleID=row["sampleID"],
-                geneName=row["geneName"],
-                isoform=row["isoform"],
-                counts=row["counts"],
-                group=row["group"],
-                sex=row["sex"],
-            )
-            Transcriptcount.save()
+        batch_size = 10000  # Adjust this based on your memory
+        batch = []
+
+        with open("./expression/files/NormalisedTranscriptCounts.csv") as csvfile:
+            for i, row in enumerate(DictReader(csvfile)):
+                batch.append(
+                    Transcriptcounts(
+                        sampleID=row["sampleID"],
+                        geneName=row["geneName"],
+                        isoform=row["isoform"],
+                        counts=row["counts"],
+                        group=row["group"],
+                        sex=row["sex"],
+                    )
+                )
+
+                if len(batch) >= batch_size:
+                    Transcriptcounts.objects.bulk_create(batch)
+                    batch = []
+                    if i % 100000 == 0:
+                        print(f"Processed {i} rows...")
+
+            # Don't forget the last batch
+            if batch:
+                Transcriptcounts.objects.bulk_create(batch)
+
+        print("Loading complete!")
 
     def __str__(self):
         return self.help

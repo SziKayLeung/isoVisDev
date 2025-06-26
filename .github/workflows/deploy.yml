@@ -1,3 +1,8 @@
+############################################################
+# This is just an initial draft, and hasn't been tested yet!!
+#
+# We should also do something with the Django SECRET_KEY? - see settings.py
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 name: Deploy to Elastic Beanstalk
 
 on:

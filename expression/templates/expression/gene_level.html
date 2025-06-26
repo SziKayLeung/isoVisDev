@@ -1,6 +1,34 @@
 {% extends 'base.html' %}
+
+{% block head %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
 {% block content %}
-<br>
+
+<!-- Gene Selection Form -->
+<div class="container-fluid d-flex justify-content-left mb-4">
+    <form method="POST" action="">
+        <!-- ADD THIS TAG IN HTML FORMS WITH POST REQUESTS -->
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="genename">Enter gene symbol name:</label>
+            <input name="genename" type="text" class="form-control my-2" placeholder="APP" style="width: 400px;" value="{{ request.POST.genename }}">
+        </div>
+        
+        <button type="submit" class="btn btn-primary mt-2">Search gene</button>
+
+        {% if error_message %}
+            <div class="alert alert-danger mt-3">{{ error_message }}</div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Results Section -->
+{% if show_results %}
+<hr class="mb-4">
+
 <table class="table" style="width: 30%">
   <thead>
     <tr>
@@ -26,6 +54,18 @@
 <br>
 <h4> Gene expression </h4>
 <div class="container-fluid d-flex justify-content-left">
-  {{plot | safe}}
+  <div id="gene-plot"></div>
 </div>
+{% endif %}
+
+{% if show_results %}
+<script>
+    // Render plot from JSON data
+    {% if plot %}
+        var plotData = JSON.parse('{{ plot|escapejs }}');
+        Plotly.newPlot('gene-plot', plotData.data, plotData.layout, {responsive: true});
+    {% endif %}
+</script>
+{% endif %}
+
 {% endblock  %}

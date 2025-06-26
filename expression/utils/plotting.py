@@ -1,108 +1,121 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import seaborn as sns
-import plotly.express as px
-import os
-import subprocess
 import logging
-from django.shortcuts import render
-import plotly.graph_objects as go
+import os
+from io import StringIO
+
+import boto3
 import pandas as pd
-import plotly
+import plotly.express as px
+import plotly.graph_objects as go
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger("isoVisDev")
 
 
-logger = logging.getLogger('isoVisDev')
+def fetch_gene_data_from_s3(gene_name):
+    """
+    Fetch gene data from AWS S3 bucket or local storage.
+
+    Args:
+        gene_name (str): The name of the gene to fetch data for
+
+    Returns:
+        pd.DataFrame: The gene data as a pandas DataFrame
+    """
+    try:
+        # Configure S3 client (uses IAM role credentials automatically)
+        s3_client = boto3.client("s3")
+
+        bucket_name = "gene-data-bucket"
+        object_key = f"{gene_name}.txt"  # Files are in top level of bucket
+
+        # Fetch the object from S3 bucket
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+        content = response["Body"].read().decode("utf-8")
+
+        # Convert to DataFrame
+        df = pd.read_csv(StringIO(content), sep="\t")
+        return df
+
+    except ClientError as e:
+        logger.error(f"Error fetching gene data for {gene_name} from S3 bucket: {e}")
+
+        # Try getting file from local storage as a fallback - this is just for running locally in development
+        dir_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        txt_path = os.path.join(dir_path, "static", f"{gene_name}.txt")
+        try:
+            df = pd.read_csv(txt_path, sep="\t")
+            return df
+        except FileNotFoundError:
+            logger.error(f"Local txt file not found for gene {gene_name}")
+            raise
+        except Exception as local_e:
+            logger.error(f"Error reading local gene data for {gene_name}: {local_e}")
+        raise
+
+    except Exception as e:
+        logger.error(f"Unexpected error fetching gene data for {gene_name}: {e}")
+        raise
+
 
 def gene_boxplot(df):
     fig = px.box(
-      data_frame = df,
-      x = 'group',
-      y = 'counts',
-      color = 'sex',
-      template='simple_white',
-      labels={'group': 'Group', 'counts':'Normalised expression'})
-      
-    fig =  fig.to_html()
-    return fig
+        data_frame=df,
+        x="group",
+        y="counts",
+        color="sex",
+        template="simple_white",
+        labels={"group": "Group", "counts": "Normalised expression"},
+    )
 
-def transript_visualisation(gtfPath, transcript):
-    # Read shorten_gaps df
-    df = pd.read_csv(gtfPath, sep='\t')
+    # Return JSON instead of HTML
+    return fig.to_json()
 
-    # Only plot a few transcripts
-    #to_plot=["ONT17_2060_1262" ,"ONT17_2060_3082" ,"ONT17_2060_2166" ,"ONT17_2060_4043"]
+
+def transript_visualisation(gene_name, transcript):
+    df = fetch_gene_data_from_s3(gene_name)
 
     # Extract transcripts to plot and reference transcripts
-    df=df[(df['transcript_id'] == transcript)| (df['transcript_id'].str[0]=='E')]
+    df = df[(df["transcript_id"] == transcript) | (df["transcript_id"].str[0] == "E")]
 
     # Create a plotly figure
     fig = go.Figure()
 
     # Group data by transcript_id and plot each type of feature (UTR, CDS, Intron) as rectangles
-    transcripts = df['transcript_id'].unique()
+    transcripts = df["transcript_id"].unique()
 
     for transcript in transcripts:
-        transcript_data = df[df['transcript_id'] == transcript]
-        
+        transcript_data = df[df["transcript_id"] == transcript]
+
         # Add rectangles for each feature type
         for _, row in transcript_data.iterrows():
-            if row['type']=='UTR':
-                color='orange'
-                width=5
-            elif row['type']=='CDS':
-                color='blue'
-                width=10
+            if row["type"] == "UTR":
+                color = "orange"
+                width = 5
+            elif row["type"] == "CDS":
+                color = "blue"
+                width = 10
             else:
-                colour='grey'
-                width=1 
-            fig.add_trace(go.Scatter(
-                x=[row['start'], row['end']],
-                y=[transcript, transcript],
-                mode='lines',
-                line=dict(width=width, color=color),
-                showlegend=False
-            ))
+                color = "grey"
+                width = 1
+            fig.add_trace(
+                go.Scatter(
+                    x=[row["start"], row["end"]],
+                    y=[transcript, transcript],
+                    mode="lines",
+                    line=dict(width=width, color=color),
+                    showlegend=False,
+                )
+            )
 
     # Update layout to make the plot clearer
     fig.update_layout(
-        #title="ACTG1",
         xaxis_title="Genomic Position",
         yaxis_title="Transcript ID",
-        yaxis=dict(tickmode='array', tickvals=transcripts, ticktext=transcripts),
+        yaxis=dict(tickmode="array", tickvals=transcripts, ticktext=transcripts),
         showlegend=False,
         height=240,
-        plot_bgcolor="white"
+        plot_bgcolor="white",
     )
 
-    fig = fig.to_html()
-    return fig
-
-def run_r_ggtranscript(gtfPath):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    expression_path = os.path.join(dir_path, '..')
-    print(f"Current Directory: {dir_path}")
-    
-    scriptR = os.path.join(dir_path, 'plot_transcript_structure.R')
-    print(f"R Script Path: {scriptR}")
-    
-    try:
-        result = subprocess.run(
-            ['Rscript', scriptR, gtfPath, expression_path],
-            capture_output=True, text=True, check=True
-        )
-        
-        # Log the standard output from the R script
-        logger.info("R Script Output:\n%s", result.stdout)
-        print("R Script Output:", result.stdout)
-
-        # Log the standard error from the R script
-        if result.stderr:  # Check if there's any error output
-            logger.error("R Script Error Output:\n%s", result.stderr)
-            print("R Script Error Output:", result.stderr)
-            
-        return result.stdout  # Return plot or relevant output
-    except subprocess.CalledProcessError as e:
-        logger.error(f'Error running R script: {e.stderr}')  # Log the error
-        print(f"Error: {e.stderr}")
-        return None  # Return None if there's an error
-  
+    # Return JSON instead of HTML
+    return fig.to_json()

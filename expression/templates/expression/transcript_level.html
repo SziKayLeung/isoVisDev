@@ -7,27 +7,205 @@
 
 {% block content %}
     <div style="min-height: calc(100vh - 100px);">
-        <h1>{{ gene_name }}</h1>
-        <br>
-        <div>
-            {% for transcript in selected_transcripts %}
-                <span><h4>{{ transcript }}</h4></span>{% if not forloop.last %}, {% endif %}
-            {% empty %}
-                <span>No transcripts selected.</span>
-            {% endfor %}
-        </div>
-   
-        <div class="container-fluid d-flex justify-content-left">
-            {{ plotStructure | safe }}
+        
+        <!-- Gene Selection Form -->
+        <div class="container-fluid d-flex justify-content-left mb-4">
+            <form method="POST" action="">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="gene_name">Enter gene symbol name:</label>
+                    <input name="gene_name" type="text" class="form-control my-2" placeholder="APP" style="width: 400px;" value="{% if gene_name %}{{ gene_name }}{% elif request.POST.gene_name %}{{ request.POST.gene_name }}{% endif %}">
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-2">Search Transcripts</button>
+
+                {% if error_message %}
+                    <div class="alert alert-danger mt-3">{{ error_message }}</div>
+                {% endif %}
+            </form>
         </div>
 
-        <div class="container-fluid d-flex justify-content-left">
-            {{ plotExpression | safe }}
-        </div>
+        <!-- Transcript Selection Form -->
+        {% if show_transcript_form %}
+            <div class="container-fluid mb-2">
+                <form method="POST" id="transcript-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="filter_action" id="filter-action" value="">
+                    <div style="display: flex; column-gap: 70px; row-gap: 20px; flex-wrap: wrap;">
+                        <!-- Transcript Selection -->
+                        <div>
+                            <div class="form-group">
+                                <label for="{{ transcript_form.Transcripts.id_for_label }}">Select Transcripts:</label>
+                                <div style="margin-top: 10px;">
+                                    {{ transcript_form.Transcripts }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                        <div>
+                            <div class="form-group">
+                                <label>Structural Category:</label>
+                                <div style="margin-top: 10px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-FSM" name="filter_fsm" 
+                                               {% if 'FSM' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
+                                        <label class="form-check-label" for="filter-FSM">
+                                            Full Splice Match
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-ISM" name="filter_ism" 
+                                               {% if 'ISM' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
+                                        <label class="form-check-label" for="filter-ISM">
+                                            Incomplete Splice Match
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-NIC" name="filter_nic" 
+                                               {% if 'NIC' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
+                                        <label class="form-check-label" for="filter-NIC">
+                                            Novel In Catalogue
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-NNC" name="filter_nnc" 
+                                               {% if 'NNC' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
+                                        <label class="form-check-label" for="filter-NNC">
+                                            Novel Not In Catalogue
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input category-filter" type="checkbox" id="filter-GG" name="filter_gg" 
+                                               {% if 'GG' in selected_categories %}checked{% endif %}
+                                               onchange="filterTranscripts()">
+                                        <label class="form-check-label" for="filter-GG">
+                                            Genic Genomic
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Normalised Counts Slider -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; min-width: 250px;">
+                            <label for="normalised-counts-slider" style="margin-bottom: 8px;">Normalised Counts:</label>
+                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                <div style="flex: 1; position: relative;">
+                                    <input type="range" class="form-range" id="normalised-counts-slider" name="counts_threshold" min="0" max="{{ max_counts|default:100 }}" value="{{ counts_threshold|default:0 }}" style="width: 100%;" 
+                                        oninput="updateSliderValuePosition(this)" onchange="filterTranscripts()">
+                                    <div id="normalised-counts-value" style="position: absolute; top: 20px; transform: translateX(-50%); font-size: 0.9rem;">{{ counts_threshold|default:0 }}</div>
+                                </div>
+                                <span style="min-width: 24px; margin-top: -6px;">{{ max_counts|default:100 }}</span>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            function updateSliderValuePosition(slider) {
+                                const value = slider.value;
+                                const valueLabel = document.getElementById('normalised-counts-value');
+                                
+                                // Update the text content
+                                valueLabel.textContent = value;
+                                
+                                // Calculate position with thumb offset compensation
+                                const percent = (value - slider.min) / (slider.max - slider.min);
+                                const sliderWidth = slider.clientWidth;
+                                
+                                // Estimate thumb width (typically 16-20px, but can vary)
+                                const thumbWidth = 16;
+                                const availableWidth = sliderWidth - thumbWidth;
+                                const thumbOffset = (availableWidth * percent) + (thumbWidth / 2);
+                                
+                                // Position the value label
+                                valueLabel.style.left = thumbOffset + 'px';
+                            }
+                            
+                            // Initialize position on page load
+                            window.addEventListener('load', function() {
+                                const slider = document.getElementById('normalised-counts-slider');
+                                updateSliderValuePosition(slider);
+                            });
+                            
+                            // Update position on window resize
+                            window.addEventListener('resize', function() {
+                                const slider = document.getElementById('normalised-counts-slider');
+                                updateSliderValuePosition(slider);
+                            });
+                            
+                            // Delay the filter when sliding to prevent too many requests
+                            let sliderTimer;
+                            document.getElementById('normalised-counts-slider').addEventListener('input', function() {
+                                clearTimeout(sliderTimer);
+                                sliderTimer = setTimeout(function() {
+                                    filterTranscripts();
+                                }, 500); // Wait 500ms after sliding stops
+                            });
+                        </script>
+                    </div>
+                    
+                    <!-- Submit Button on new line -->
+                    <div style="flex-basis: 100%; margin-top: 16px;">
+                        <button type="submit" class="btn btn-primary">{% if show_results %}Update Results{% else %}Submit{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+        <!-- Results Display -->
+        {% if show_results %}
+            <hr class="mb-4">
+            <div class="mt-4">
+                <h2>{{ gene_name }}</h2>
+                <br>
+                <div>
+                    {% for transcript in selected_transcripts %}
+                        {% if forloop.first %}
+                            <span><h4>{{ transcript }}</h4></span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+           
+                <div class="container-fluid d-flex justify-content-left mb-4">
+                    <div id="plot-structure"></div>
+                </div>
+
+                <div class="container-fluid d-flex justify-content-left">
+                    <div id="plot-expression"></div>
+                </div>
+            </div>
+        {% endif %}
 
     </div>
 
+    {% if show_results %}
     <script>
+        // Render plots from JSON data
+        {% if plotStructure %}
+            var plotStructureData = JSON.parse('{{ plotStructure|escapejs }}');
+            Plotly.newPlot('plot-structure', plotStructureData.data, plotStructureData.layout, {responsive: true});
+        {% endif %}
+        
+        {% if plotExpression %}
+            var plotExpressionData = JSON.parse('{{ plotExpression|escapejs }}');
+            Plotly.newPlot('plot-expression', plotExpressionData.data, plotExpressionData.layout, {responsive: true});
+        {% endif %}
+    </script>
+    {% endif %}
+
+    <script>
+        function filterTranscripts() {
+            // Set the hidden field to indicate this is a filter action
+            document.getElementById('filter-action').value = 'filter';
+            // Submit the form
+            document.getElementById('transcript-form').submit();
+        }
+        
         function togglePlot(plotId) {
             const plots = document.querySelectorAll('.plot');
             plots.forEach(plot => {
@@ -45,7 +223,7 @@
     </script>
 
     <style>
-        .active {
+        button.active {
             background-color: #007bff;  /* Highlight color */
             color: white;                /* Text color for active button */
         }

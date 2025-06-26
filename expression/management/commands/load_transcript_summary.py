@@ -35,9 +35,7 @@ class Command(BaseCommand):
         print("Loading transcript category and count data")
 
         # First, load category data into a dictionary
-        category_file_path = (
-            "./expression/files/NormalisedTranscriptCounts_category.csv"
-        )
+        category_file_path = "./expression/files/NormalisedTranscriptCounts_category.csv"
         count_file_path = "./expression/files/NormalisedTranscriptCounts_tallied.csv"
 
         # Load category data
@@ -54,21 +52,32 @@ class Command(BaseCommand):
         count_data = {}
         missing_in_category = []
         missing_in_count = []
+        batch = []
+        batch_size = 10000
 
         print("Loading count data and creating database objects...")
-        for row in DictReader(open(count_file_path)):
-            isoform = row["isoform"]
-            count = float(row["n"])
-            count_data[isoform] = count
+        with open(count_file_path) as csvfile:
+            for i, row in enumerate(DictReader(csvfile)):
+                isoform = row["isoform"]
+                count = float(row["n"])
+                count_data[isoform] = count
 
-            # Check if this isoform exists in category data
-            if isoform in category_data:
-                transcript_summary = TranscriptSummary(
-                    isoform=isoform, category=category_data[isoform], counts=count
-                )
-                transcript_summary.save()
-            else:
-                missing_in_category.append(isoform)
+                # Check if this isoform exists in category data
+                if isoform in category_data:
+                    batch.append(TranscriptSummary(isoform=isoform, category=category_data[isoform], counts=count))
+
+                    if len(batch) >= batch_size:
+                        TranscriptSummary.objects.bulk_create(batch)
+                        batch = []
+                else:
+                    missing_in_category.append(isoform)
+
+                if i % 10000 == 0:
+                    print(f"Processed {i} rows...")
+
+            # Don't forget the last batch
+            if batch:
+                TranscriptSummary.objects.bulk_create(batch)
 
         print(f"Loaded {len(count_data)} transcripts from count file")
 
@@ -79,18 +88,14 @@ class Command(BaseCommand):
 
         # Report any mismatches
         if missing_in_category:
-            print(
-                f"WARNING: {len(missing_in_category)} transcripts found in count file but not in category file:"
-            )
+            print(f"WARNING: {len(missing_in_category)} transcripts found in count file but not in category file:")
             for isoform in missing_in_category[:10]:  # Show first 10
                 print(f"  - {isoform}")
             if len(missing_in_category) > 10:
                 print(f"  ... and {len(missing_in_category) - 10} more")
 
         if missing_in_count:
-            print(
-                f"WARNING: {len(missing_in_count)} transcripts found in category file but not in count file:"
-            )
+            print(f"WARNING: {len(missing_in_count)} transcripts found in category file but not in count file:")
             for isoform in missing_in_count[:10]:  # Show first 10
                 print(f"  - {isoform}")
             if len(missing_in_count) > 10:
@@ -102,9 +107,7 @@ class Command(BaseCommand):
         if not missing_in_category and not missing_in_count:
             print("✓ All transcripts matched between both files")
         else:
-            print(
-                "⚠ Some transcripts were missing in one file or the other (see warnings above)"
-            )
+            print("⚠ Some transcripts were missing in one file or the other (see warnings above)")
 
         print("Transcript category and count data loaded successfully")
 
